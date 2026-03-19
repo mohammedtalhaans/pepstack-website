@@ -2,8 +2,16 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="bg-white/[0.02] border-t border-white/[0.06]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+    <footer className="relative bg-white/[0.02] border-t border-white/[0.06]">
+      {/* Gradient fade at top */}
+      <div
+        className="absolute top-0 left-0 right-0 h-24 pointer-events-none"
+        style={{
+          background: "linear-gradient(to bottom, rgba(10,14,26,0.8), transparent)",
+        }}
+      />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Left: logo + copyright */}
           <div className="flex items-center gap-2.5">

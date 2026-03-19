@@ -1,7 +1,13 @@
 "use client";
 
+import { useRef, useCallback } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 
 /* ---------- Floating pill component ---------- */
 function FloatingPill({
@@ -17,6 +23,97 @@ function FloatingPill({
     >
       {children}
     </div>
+  );
+}
+
+/* ---------- Word-by-word text reveal ---------- */
+function WordReveal({
+  text,
+  className = "",
+  startDelay = 0,
+}: {
+  text: string;
+  className?: string;
+  startDelay?: number;
+}) {
+  const words = text.split(" ");
+  return (
+    <span className={className}>
+      {words.map((word, i) => (
+        <span key={i} className="inline-block overflow-hidden">
+          <motion.span
+            className="inline-block"
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{
+              duration: 0.5,
+              delay: startDelay + i * 0.08,
+              ease: [0.25, 0.46, 0.45, 0.94],
+            }}
+          >
+            {word}
+          </motion.span>
+          {i < words.length - 1 && "\u00A0"}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/* ---------- Magnetic CTA button ---------- */
+function MagneticButton({
+  children,
+  href,
+  className = "",
+}: {
+  children: React.ReactNode;
+  href: string;
+  className?: string;
+}) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 150, damping: 15 });
+  const springY = useSpring(y, { stiffness: 150, damping: 15 });
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const distX = e.clientX - centerX;
+      const distY = e.clientY - centerY;
+      const distance = Math.sqrt(distX * distX + distY * distY);
+
+      if (distance < 100) {
+        const strength = (100 - distance) / 100;
+        x.set(distX * strength * 0.3);
+        y.set(distY * strength * 0.3);
+      } else {
+        x.set(0);
+        y.set(0);
+      }
+    },
+    [x, y]
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
+
+  return (
+    <motion.a
+      ref={ref}
+      href={href}
+      style={{ x: springX, y: springY }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={className}
+    >
+      {children}
+    </motion.a>
   );
 }
 
@@ -144,8 +241,41 @@ function PhoneScreen() {
 
 /* ---------- Hero ---------- */
 export default function Hero() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const spotlightX = useSpring(mouseX, { stiffness: 80, damping: 30 });
+  const spotlightY = useSpring(mouseY, { stiffness: 80, damping: 30 });
+
+  const spotlightBackground = useTransform(
+    [spotlightX, spotlightY],
+    ([x, y]: number[]) =>
+      `radial-gradient(600px circle at ${x}px ${y}px, rgba(124,58,237,0.08), transparent 60%)`
+  );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      mouseX.set(e.clientX - rect.left);
+      mouseY.set(e.clientY - rect.top);
+    },
+    [mouseX, mouseY]
+  );
+
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20 pb-12 px-4">
+    <section
+      ref={sectionRef}
+      onMouseMove={handleMouseMove}
+      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-24 pb-16 px-4"
+    >
+      {/* Cursor spotlight overlay */}
+      <motion.div
+        className="absolute inset-0 z-[1] pointer-events-none"
+        style={{ background: spotlightBackground }}
+      />
+
       {/* Background gradient orbs */}
       <div
         className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full opacity-30 blur-[120px] pointer-events-none"
@@ -175,22 +305,20 @@ export default function Hero() {
           </span>
         </motion.div>
 
-        {/* Headline */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] mb-6"
-        >
-          Your Peptide Protocol,{" "}
-          <span className="text-gradient">On Autopilot</span>
-        </motion.h1>
+        {/* Headline — word-by-word reveal */}
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
+          <WordReveal text="Your Peptide Protocol," startDelay={0.2} />
+          <br />
+          <span className="text-gradient">
+            <WordReveal text="On Autopilot" startDelay={0.7} />
+          </span>
+        </h1>
 
         {/* Subtitle */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.6, delay: 0.9 }}
           className="text-lg md:text-xl text-slate-400 max-w-2xl mb-8 leading-relaxed"
         >
           Track doses, log bloodwork, monitor symptoms — all in one beautiful
@@ -201,15 +329,15 @@ export default function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
+          transition={{ duration: 0.6, delay: 1.1 }}
           className="flex flex-col sm:flex-row gap-4 mb-16"
         >
-          <a
+          <MagneticButton
             href="#pricing"
             className="inline-flex items-center justify-center px-8 py-3.5 rounded-full text-base font-semibold text-white bg-gradient-accent hover:opacity-90 transition-opacity shadow-lg shadow-violet-500/25"
           >
             Pre-Order — $10/year
-          </a>
+          </MagneticButton>
           <a
             href="#features"
             className="inline-flex items-center justify-center px-8 py-3.5 rounded-full text-base font-semibold text-white border border-white/20 hover:bg-white/5 transition-colors"
@@ -223,7 +351,7 @@ export default function Hero() {
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.8 }}
+        transition={{ duration: 0.8, delay: 1.2 }}
         className="relative z-10 w-full max-w-sm mx-auto"
       >
         {/* Floating pills */}

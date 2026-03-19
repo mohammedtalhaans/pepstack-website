@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef, useCallback } from "react";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 
 /* ---------- SVG Icons ---------- */
 function SyringeIcon({ className = "w-8 h-8" }: { className?: string }) {
@@ -108,8 +109,17 @@ function MiniChatScreen() {
   );
 }
 
-/* ---------- Feature card wrapper ---------- */
-function FeatureCard({
+/* ---------- Spotlight feature card ---------- */
+const CARD_COLORS: Record<number, string> = {
+  0: "124,58,237",   // violet
+  1: "236,72,153",   // pink
+  2: "6,182,212",    // cyan
+  3: "16,185,129",   // emerald
+  4: "245,158,11",   // amber
+  5: "59,130,246",   // blue
+};
+
+function SpotlightCard({
   children,
   className = "",
   index,
@@ -118,16 +128,50 @@ function FeatureCard({
   className?: string;
   index: number;
 }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const isHovered = useMotionValue(0);
+
+  const color = CARD_COLORS[index] || "124,58,237";
+
+  const spotlightBg = useTransform(
+    [mouseX, mouseY, isHovered],
+    ([x, y, hovered]: number[]) =>
+      hovered
+        ? `radial-gradient(350px circle at ${x}px ${y}px, rgba(${color},0.12), transparent 60%)`
+        : "none"
+  );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!cardRef.current) return;
+      const rect = cardRef.current.getBoundingClientRect();
+      mouseX.set(e.clientX - rect.left);
+      mouseY.set(e.clientY - rect.top);
+    },
+    [mouseX, mouseY]
+  );
+
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       viewport={{ once: true, margin: "-50px" }}
       whileHover={{ scale: 1.02 }}
-      className={`group relative rounded-2xl bg-white/[0.06] border border-white/[0.08] backdrop-blur-xl p-6 transition-shadow hover:shadow-[0_0_40px_rgba(124,58,237,0.15)] ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => isHovered.set(1)}
+      onMouseLeave={() => isHovered.set(0)}
+      className={`group relative rounded-2xl bg-white/[0.06] border border-white/[0.08] backdrop-blur-xl p-6 transition-shadow hover:shadow-[0_0_40px_rgba(124,58,237,0.15)] overflow-hidden ${className}`}
     >
-      {children}
+      {/* Spotlight overlay */}
+      <motion.div
+        className="absolute inset-0 z-0 pointer-events-none rounded-2xl"
+        style={{ background: spotlightBg }}
+      />
+      <div className="relative z-10">{children}</div>
     </motion.div>
   );
 }
@@ -135,7 +179,7 @@ function FeatureCard({
 /* ---------- Main section ---------- */
 export default function FeatureGrid() {
   return (
-    <section id="features" className="relative py-24 md:py-32 px-4">
+    <section id="features" className="relative py-32 md:py-40 px-4">
       {/* Background glow */}
       <div
         className="absolute top-[30%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-15 blur-[120px] pointer-events-none"
@@ -162,7 +206,7 @@ export default function FeatureGrid() {
         {/* Bento grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Large card 1: Smart Dosing */}
-          <FeatureCard index={0}>
+          <SpotlightCard index={0}>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-violet-500/15 flex items-center justify-center text-violet-400">
                 <SyringeIcon className="w-6 h-6" />
@@ -173,10 +217,10 @@ export default function FeatureGrid() {
               </div>
             </div>
             <MiniHomeScreen />
-          </FeatureCard>
+          </SpotlightCard>
 
           {/* Large card 2: PepStack AI */}
-          <FeatureCard index={1}>
+          <SpotlightCard index={1}>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-pink-500/15 flex items-center justify-center text-pink-400">
                 <SparkleIcon className="w-6 h-6" />
@@ -187,46 +231,46 @@ export default function FeatureGrid() {
               </div>
             </div>
             <MiniChatScreen />
-          </FeatureCard>
+          </SpotlightCard>
         </div>
 
         {/* 4 small cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {/* Bloodwork */}
-          <FeatureCard index={2}>
+          <SpotlightCard index={2}>
             <div className="w-10 h-10 rounded-xl bg-cyan-500/15 flex items-center justify-center text-cyan-400 mb-3">
               <BarChartIcon />
             </div>
             <h3 className="text-[#F8FAFC] font-semibold text-base mb-1">Bloodwork</h3>
             <p className="text-[#94A3B8] text-sm">Track 20+ markers</p>
-          </FeatureCard>
+          </SpotlightCard>
 
           {/* Weight & Symptoms */}
-          <FeatureCard index={3}>
+          <SpotlightCard index={3}>
             <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-400 mb-3">
               <TrendingIcon />
             </div>
             <h3 className="text-[#F8FAFC] font-semibold text-base mb-1">Weight &amp; Symptoms</h3>
             <p className="text-[#94A3B8] text-sm">See the full picture</p>
-          </FeatureCard>
+          </SpotlightCard>
 
           {/* Dose Calculator */}
-          <FeatureCard index={4}>
+          <SpotlightCard index={4}>
             <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400 mb-3">
               <CalculatorIcon />
             </div>
             <h3 className="text-[#F8FAFC] font-semibold text-base mb-1">Dose Calculator</h3>
             <p className="text-[#94A3B8] text-sm">Never guess again</p>
-          </FeatureCard>
+          </SpotlightCard>
 
           {/* Medical Export */}
-          <FeatureCard index={5}>
+          <SpotlightCard index={5}>
             <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center text-blue-400 mb-3">
               <DocumentIcon />
             </div>
             <h3 className="text-[#F8FAFC] font-semibold text-base mb-1">Medical Export</h3>
             <p className="text-[#94A3B8] text-sm">Share with your doctor</p>
-          </FeatureCard>
+          </SpotlightCard>
         </div>
       </div>
     </section>

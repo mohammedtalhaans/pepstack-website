@@ -10,6 +10,16 @@ const navLinks = [
   { label: "FAQ", href: "#faq" },
 ];
 
+/* ---------- Nav link with slide-in underline ---------- */
+function NavLink({ label, href }: { label: string; href: string }) {
+  return (
+    <a href={href} className="relative text-sm text-slate-300 hover:text-white transition-colors group py-1">
+      {label}
+      <span className="absolute bottom-0 left-0 h-px w-0 bg-gradient-to-r from-violet-400 to-pink-400 transition-all duration-300 ease-out group-hover:w-full" />
+    </a>
+  );
+}
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -56,13 +66,7 @@ export default function Navbar() {
             {/* Desktop links */}
             <div className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="text-sm text-slate-300 hover:text-white transition-colors"
-                >
-                  {link.label}
-                </a>
+                <NavLink key={link.href} label={link.label} href={link.href} />
               ))}
             </div>
 
@@ -97,6 +101,17 @@ export default function Navbar() {
               />
             </button>
           </div>
+        </div>
+
+        {/* Animated shimmer line at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-px overflow-hidden">
+          <div
+            className="h-full w-full"
+            style={{
+              background: "linear-gradient(90deg, transparent 0%, transparent 30%, rgba(124,58,237,0.6) 45%, rgba(236,72,153,0.6) 55%, transparent 70%, transparent 100%)",
+              animation: "navShimmer 3s ease-in-out infinite",
+            }}
+          />
         </div>
       </nav>
 

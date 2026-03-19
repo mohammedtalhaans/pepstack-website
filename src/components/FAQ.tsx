@@ -1,7 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
 
 const faqs = [
   {
@@ -34,30 +39,9 @@ const faqs = [
   },
 ];
 
-function PlusMinusIcon({ open }: { open: boolean }) {
-  return (
-    <div className="relative h-5 w-5 shrink-0">
-      {/* Horizontal bar (always visible) */}
-      <span className="absolute top-1/2 left-0 h-0.5 w-5 -translate-y-1/2 rounded-full bg-[#94A3B8] transition-colors" />
-      {/* Vertical bar (rotates away when open) */}
-      <motion.span
-        animate={{ rotate: open ? 90 : 0, opacity: open ? 0 : 1 }}
-        transition={{ duration: 0.2 }}
-        className="absolute top-0 left-1/2 h-5 w-0.5 -translate-x-1/2 rounded-full bg-[#94A3B8]"
-      />
-    </div>
-  );
-}
-
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  const toggle = (i: number) => {
-    setOpenIndex(openIndex === i ? null : i);
-  };
-
   return (
-    <section id="faq" className="relative py-24 px-4">
+    <section id="faq" className="relative py-20 px-4">
       <div className="relative z-10 mx-auto max-w-2xl">
         {/* Heading */}
         <motion.h2
@@ -70,8 +54,8 @@ export default function FAQ() {
           Frequently Asked Questions
         </motion.h2>
 
-        {/* Accordion */}
-        <div className="space-y-3">
+        {/* shadcn Accordion */}
+        <Accordion className="space-y-3">
           {faqs.map((faq, i) => (
             <motion.div
               key={i}
@@ -79,34 +63,28 @@ export default function FAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: i * 0.05 }}
-              className="rounded-2xl bg-white/[0.06] border border-white/[0.08] backdrop-blur-xl overflow-hidden"
             >
-              <button
-                onClick={() => toggle(i)}
-                className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left"
+              <AccordionItem
+                value={i}
+                className="rounded-2xl bg-white/[0.06] border border-white/[0.08] backdrop-blur-xl overflow-hidden"
               >
-                <span className="text-[#F8FAFC] font-medium">{faq.q}</span>
-                <PlusMinusIcon open={openIndex === i} />
-              </button>
-
-              <AnimatePresence initial={false}>
-                {openIndex === i && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="overflow-hidden"
+                <AccordionTrigger className="px-6 py-4 text-[#F8FAFC] font-medium hover:no-underline [&>svg]:text-slate-400">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-5">
+                  <motion.p
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="text-sm leading-relaxed text-[#94A3B8]"
                   >
-                    <p className="px-6 pb-5 text-sm leading-relaxed text-[#94A3B8]">
-                      {faq.a}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    {faq.a}
+                  </motion.p>
+                </AccordionContent>
+              </AccordionItem>
             </motion.div>
           ))}
-        </div>
+        </Accordion>
       </div>
     </section>
   );

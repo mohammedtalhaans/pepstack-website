@@ -3,25 +3,59 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView, useMotionValue, animate } from "framer-motion";
 
-function AnimatedCounter() {
-  const ref = useRef<HTMLSpanElement>(null);
+/* ---------- Single rolling digit ---------- */
+function SlotDigit({ digit, delay }: { digit: string; delay: number }) {
+  const [currentDigit, setCurrentDigit] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
-  const motionValue = useMotionValue(0);
-  const [display, setDisplay] = useState("0");
+  const targetDigit = parseInt(digit, 10);
 
   useEffect(() => {
-    if (!isInView) return;
-    const controls = animate(motionValue, 2000, {
-      duration: 2,
-      ease: "easeOut",
+    if (!isInView || isNaN(targetDigit)) return;
+    const motionVal = animate(0, targetDigit + 20, {
+      duration: 1.2 + delay * 0.3,
+      ease: [0.25, 0.46, 0.45, 0.94],
       onUpdate: (v) => {
-        setDisplay(Math.round(v).toLocaleString());
+        setCurrentDigit(Math.round(v) % 10);
+      },
+      onComplete: () => {
+        setCurrentDigit(targetDigit);
       },
     });
-    return () => controls.stop();
-  }, [isInView, motionValue]);
+    return () => motionVal.stop();
+  }, [isInView, targetDigit, delay]);
 
-  return <span ref={ref}>{display}+</span>;
+  if (isNaN(targetDigit)) {
+    // Non-digit character (comma, etc)
+    return <span className="inline-block">{digit}</span>;
+  }
+
+  return (
+    <div ref={ref} className="relative inline-block w-[0.65em] h-[1.1em] overflow-hidden">
+      <motion.div
+        key={currentDigit}
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.15, ease: "easeOut" }}
+        className="absolute inset-0 flex items-center justify-center"
+      >
+        {currentDigit}
+      </motion.div>
+    </div>
+  );
+}
+
+/* ---------- Slot machine counter ---------- */
+function SlotMachineCounter({ target }: { target: string }) {
+  const chars = target.split("");
+  return (
+    <span className="inline-flex items-baseline">
+      {chars.map((char, i) => (
+        <SlotDigit key={i} digit={char} delay={i} />
+      ))}
+      <span>+</span>
+    </span>
+  );
 }
 
 function StarIcon({ className }: { className?: string }) {
@@ -58,10 +92,10 @@ export default function SocialProof() {
           </div>
         </div>
 
-        {/* Animated counter */}
+        {/* Slot machine counter */}
         <div className="text-center">
           <p className="text-3xl font-extrabold bg-gradient-to-r from-[#7C3AED] to-[#EC4899] bg-clip-text text-transparent">
-            <AnimatedCounter />
+            <SlotMachineCounter target="2,000" />
           </p>
           <p className="text-sm text-[#94A3B8]">people pre-ordered</p>
         </div>

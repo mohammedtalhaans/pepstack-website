@@ -118,6 +118,31 @@ function SolutionCard({
   );
 }
 
+/* ---------- Connecting arrow SVG ---------- */
+function ConnectingArrow({ index }: { index: number }) {
+  return (
+    <motion.svg
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6, delay: 0.3 + index * 0.15 }}
+      viewport={{ once: true }}
+      className="hidden md:block absolute top-1/2 -translate-y-1/2 text-white/15"
+      style={{ left: "calc(50% - 24px)", width: 48, height: 24 }}
+      viewBox="0 0 48 24"
+      fill="none"
+    >
+      <path
+        d="M0 12 H38 M32 6 L42 12 L32 18"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        strokeDasharray="4 3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </motion.svg>
+  );
+}
+
 /* ---------- Main section ---------- */
 export default function ProblemSolution() {
   const painPoints = [
@@ -157,7 +182,7 @@ export default function ProblemSolution() {
   ];
 
   return (
-    <section className="relative py-24 md:py-32 px-4">
+    <section className="relative py-16 md:py-28 px-4">
       {/* Background glow */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full opacity-15 blur-[120px] pointer-events-none"
@@ -181,8 +206,8 @@ export default function ProblemSolution() {
           </p>
         </motion.div>
 
-        {/* Two-column grid */}
-        <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+        {/* Two-column grid — solutions offset down for visual tension */}
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12 relative">
           {/* Pain points */}
           <div className="space-y-4">
             <motion.p
@@ -195,12 +220,15 @@ export default function ProblemSolution() {
               The problem
             </motion.p>
             {painPoints.map((item, i) => (
-              <PainCard key={item.title} icon={item.icon} title={item.title} description={item.description} index={i} />
+              <div key={item.title} className="relative">
+                <PainCard icon={item.icon} title={item.title} description={item.description} index={i} />
+                <ConnectingArrow index={i} />
+              </div>
             ))}
           </div>
 
-          {/* Solutions */}
-          <div className="space-y-4">
+          {/* Solutions — offset ~40px lower */}
+          <div className="space-y-4 md:mt-10">
             <motion.p
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}

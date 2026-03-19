@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn("antialiased", inter.variable, "font-sans", geist.variable)}>
-      <body className="min-h-screen bg-[#0A0E1A] text-white font-sans">
+      <body className="min-h-screen bg-[#0A0E1A] text-white font-sans overflow-x-hidden">
         {children}
       </body>
     </html>
